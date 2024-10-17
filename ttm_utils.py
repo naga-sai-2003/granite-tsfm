@@ -171,7 +171,7 @@ def run(train_year, index):
                 greater_is_better=False
             )
 
-            early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=10, early_stopping_patience=0.0,)
+            early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=10, early_stopping_threshold=0.0,)
             tracking_callback = TrackingCallback()
 
             # optimizer and scheduler
