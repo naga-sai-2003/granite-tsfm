@@ -524,7 +524,7 @@ class ForecastDFDataset(BaseConcatDFDataset):
                 timestamp_column=timestamp_column,
                 x_cols=x_cols,
                 y_cols=y_cols,
-                id_cols=id_cols
+                id_cols=id_cols,
                 context_length=context_length,
                 prediction_length=prediction_length,
                 group_id=group_id,
@@ -557,6 +557,7 @@ class ForecastDFDataset(BaseConcatDFDataset):
             time_id = index * self.stride
 
             seq_x = self.X[time_id : time_id + self.context_length].values.astype(np.float32)
+            seq_id=self.index[time_id: time_id+self.context_length].values.astype(np.float32)
 
             for idx in range(1, 22):
                 idx_columns=[f'er-predictions']
