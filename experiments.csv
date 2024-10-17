@@ -1,0 +1,16 @@
+context_length,forecast_length,batch_size,scaling,fewshot_fraction,learning_rate,epochs,head_dropout_rate,decoder_mode,backbone_freeze,early_stopping_patience,early_stopping_threshold,train_window,test_window,experiment_name
+1024,96,96,TRUE,1,0.001,30,0.4,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[01]-backbone-train
+1024,96,96,TRUE,1,0.001,30,0.3,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[02]-backbone-train
+1024,96,96,TRUE,1,0.001,20,0.3,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[03]-backbone-train
+1024,96,96,TRUE,1,0.0001,30,0.3,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[04]-backbone-train
+1024,96,96,TRUE,1,0.0001,20,0.3,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[05]-backbone-train
+1024,96,96,TRUE,1,0.001,20,0.1,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[06]-backbone-train
+1024,96,96,TRUE,1,0.001,20,0.5,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[07]-backbone-train
+1024,96,96,TRUE,1,0.0001,20,0.1,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[08]-backbone-train
+1024,96,96,TRUE,1,0.0001,20,0.3,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[09]-backbone-train
+1024,96,96,TRUE,1,0.0001,20,0.5,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[10]-backbone-train
+1024,96,96,TRUE,1,0.001,30,0.1,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[11]-backbone-train
+1024,96,96,TRUE,1,0.001,30,0.5,0,FALSE,10,0,2024-01-01,2024-03-31,experiment-[12]-backbone-train
+1024,96,96,TRUE,1,0.0001,30,0.1,0,FALSE,10,0,2024-01-02,2024-04-01,experiment-[13]-backbone-train
+1024,96,96,TRUE,1,0.0001,30,0.3,0,FALSE,10,0,2024-01-03,2024-04-02,experiment-[14]-backbone-train
+1024,96,96,TRUE,1,0.0001,30,0.5,0,FALSE,10,0,2024-01-04,2024-04-03,experiment-[15]-backbone-train
