@@ -39,6 +39,7 @@ class BaseDFDataset(torch.utils.data.Dataset):
         group_id: Optional[Union[List[int], List[str]]] = None,
         x_cols: list = [],
         y_cols: list = [],
+        id_cols: list=[],
         drop_cols: list = [],
         context_length: int = 1,
         prediction_length: int = 0,
@@ -73,6 +74,7 @@ class BaseDFDataset(torch.utils.data.Dataset):
         self.id_columns = id_columns
         self.x_cols = x_cols
         self.y_cols = y_cols
+        self.id_cols=id_cols
         self.drop_cols = drop_cols
         self.context_length = context_length
         self.prediction_length = prediction_length
@@ -103,6 +105,11 @@ class BaseDFDataset(torch.utils.data.Dataset):
                 drop_cols += [timestamp_column]
             self.X = data_df.drop(drop_cols, axis=1) if len(drop_cols) > 0 else data_df
             self.x_cols = list(self.X.columns)
+
+        if len(id_cols) > 0:
+            self.index=data_df[id_cols]
+        else:
+            self.index=None
 
         # get target data
         if len(y_cols) > 0:
@@ -488,6 +495,7 @@ class ForecastDFDataset(BaseConcatDFDataset):
             self.autoregressive_modeling = autoregressive_modeling
             self.masking_specification = masking_specification
 
+            id_cols=['er-predictions']
             x_cols = join_list_without_repeat(
                 target_columns,
                 observable_columns,
@@ -516,6 +524,7 @@ class ForecastDFDataset(BaseConcatDFDataset):
                 timestamp_column=timestamp_column,
                 x_cols=x_cols,
                 y_cols=y_cols,
+                id_cols=id_cols
                 context_length=context_length,
                 prediction_length=prediction_length,
                 group_id=group_id,
@@ -548,6 +557,12 @@ class ForecastDFDataset(BaseConcatDFDataset):
             time_id = index * self.stride
 
             seq_x = self.X[time_id : time_id + self.context_length].values.astype(np.float32)
+
+            for idx in range(1, 22):
+                idx_columns=[f'er-predictions']
+                self.x_idx_columns=np.array([(c in idx_columns) for c in self.id_cols])
+                seq_x[-idx, self.x_mask_targets]=seq_id[-idx, self.x_idx_columns]
+            
             if not self.autoregressive_modeling:
                 seq_x[:, self.x_mask_targets] = 0
 
