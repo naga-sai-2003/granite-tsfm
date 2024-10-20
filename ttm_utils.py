@@ -70,7 +70,7 @@ def get_confidence_score(df, metrics_to_calculate=['confidence_score']):
 # input-data function.
 def get_data(isin):
     # Get data from Elasticsearch
-    data = get_es_data(isin, [2009, 2024], 'eq_er_model')
+    data = get_es_data(isin, [2009, 2024], 'eq_cat_er_model')
     
     # filter data for monthly schedular.
     data = data[data['schedular'] == 'Monthly']
@@ -91,14 +91,14 @@ def get_data(isin):
     data = data.ffill()
     
     # save the data to s3.
-    data_key = f'test/varaprasad-ttm-experiments/normalized-eforward-fill/{isin}.csv'
+    data_key = f'test/varaprasad-ttm-experiments/data/normalized-cat-er-forward-fill/{isin}.csv'
     df2s3(data, 'micro-ops-output', data_key)
     return data
 
 def run(train_year, index):
     isins=aieq_isins[index : index + 100]
     for idx, isin in tqdm(enumerate(isins)):
-        res_file=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-er-data-fill/historical/{train_year+1}/preds/univariate/{isin}.csv'
+        res_file=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-cater-data-fill/historical/{train_year+1}/preds/univariate/{isin}.csv'
         try:
             s32df('micro-ops-output', res_file)
             continue
@@ -193,7 +193,7 @@ def run(train_year, index):
 
             # train the model.
             forecast_trainer.train()
-            model_key=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-er-data-fill/historical/{train_year+1}/models/univariate/ttm_{isin}.bin'
+            model_key=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-cater-data-fill/historical/{train_year+1}/models/univariate/ttm_{isin}.bin'
             write_model_to_s3(forecast_trainer.model, 'micro-ops-output', model_key)
 
             res = forecast_trainer.evaluate(test_dataset)
