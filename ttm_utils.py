@@ -229,7 +229,5 @@ def run(train_year, index):
             df2s3(dataset_test, 'micro-ops-output', res_file) 
 
         except Exception as e:
-            print(e)
-            print(traceback.format_exc())
             continue
     return True
