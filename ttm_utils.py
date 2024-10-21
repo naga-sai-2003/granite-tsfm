@@ -89,8 +89,7 @@ def get_data(isin):
     df2s3(data, 'micro-ops-output', data_key)
     return data
 
-index=0
-for train_year in range(2019, 2024):
+def run(train_year, index):
     isins=aieq_isins[index : index + 100]
     for idx, isin in tqdm(enumerate(isins)):
         res_file=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-cater-data-fill/historical/{train_year+1}/preds/univariate/{isin}.csv'
@@ -228,3 +227,4 @@ for train_year in range(2019, 2024):
             print(e)
             print(traceback.format_exc())
             continue
+    return None
