@@ -45,26 +45,20 @@ num_epochs = 50
 batch_size = int(exp['batch_size'])
 
 # define the confidence score function.
-def get_confidence_score(df, metrics_to_calculate=['confidence_score']):
+def get_confidence_score(df, metrics_to_calculate = ['confidence_score']):
     metrics_columns = metrics_to_calculate
-    min_confidence = 0.01
-    max_values = df['actual_monthly_return'].rolling(22 * 24, min_periods=22).max()
-    min_values = df['actual_monthly_return'].rolling(22 * 24, min_periods=22).min()
-
-    def calculate_confidence_score(row, i):
-        if row['actual_monthly_return_predictions'] >= max_values.loc[i] or \
-           row['actual_monthly_return_predictions'] <= min_values.loc[i] or \
-           row['actual_monthly_return'] >= max_values.loc[i] or \
-           row['actual_monthly_return'] <= min_values.loc[i]:
-            return min_confidence
-        else:
-            if row['actual_monthly_return'] > row['actual_monthly_return_predictions']:
-                return max(min_confidence, (max_values.loc[i] - row['actual_monthly_return']) / (max_values.loc[i] - row['actual_monthly_return_predictions']))
-            else:
-                return max(min_confidence, (row['actual_monthly_return'] - min_values.loc[i]) / (row['actual_monthly_return_predictions'] - min_values.loc[i]))
-
+    # Confidence score
     if 'confidence_score' in metrics_columns or 'avg_confidence_score' in metrics_columns:
-        return df.apply(calculate_confidence_score, axis=1, args=(range(len(df)),))
+        min_confidence = 0.01
+        max_values =  df['actual_monthly_return'].rolling(22 * 24, min_periods = 22).max()
+        min_values =  df['actual_monthly_return'].rolling(22 * 24, min_periods = 22).min()
+        filt1 = [df.loc[i, 'actual_monthly_return_predictions'] >= max_values.loc[i] for i in range(len(df))]
+        filt2 = [df.loc[i, 'actual_monthly_return_predictions'] <= min_values.loc[i] for i in range(len(df))]
+        filt3 = [df.loc[i, 'actual_monthly_return'] >= max_values.loc[i] for i in range(len(df))]
+        filt4 = [df.loc[i, 'actual_monthly_return'] <= min_values.loc[i] for i in range(len(df))]
+
+        return [min_confidence if (filt1[i] or filt2[i] or filt3[i] or filt4[i]) else
+        max(min_confidence, (max_values.loc[i] - df.loc[i, "actual_monthly_return"])/(max_values.loc[i] - df.loc[i, 'actual_monthly_return_predictions']) if df.loc[i, "actual_monthly_return"] > df.loc[i, 'actual_monthly_return_predictions'] else (df.loc[i, "actual_monthly_return"] - min_values.loc[i]) / (df.loc[i, 'actual_monthly_return_predictions'] - min_values.loc[i])) for i in range(len(df))]
 
 
 # input-data function.
@@ -95,15 +89,16 @@ def get_data(isin):
     df2s3(data, 'micro-ops-output', data_key)
     return data
 
-def run(train_year, index):
+index=0
+for train_year in range(2019, 2024):
     isins=aieq_isins[index : index + 100]
     for idx, isin in tqdm(enumerate(isins)):
         res_file=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-cater-data-fill/historical/{train_year+1}/preds/univariate/{isin}.csv'
-        try:
-            s32df('micro-ops-output', res_file)
-            continue
-        except Exception as e:
-            pass
+#         try:
+#             s32df('micro-ops-output', res_file)
+#             continue
+#         except Exception as e:
+#             pass
 
         try:
             data=get_data(isin)
@@ -194,15 +189,12 @@ def run(train_year, index):
             # train the model.
             forecast_trainer.train()
             model_key=f'test/varaprasad-ttm-experiments/experiments/fewshot/aieq-cater-data-fill/historical/{train_year+1}/models/univariate/ttm_{isin}.bin'
-            write_model_to_s3(forecast_trainer.model, 'micro-ops-output', model_key)
-
-            res = forecast_trainer.evaluate(test_dataset)
-            eval_loss = res['eval_loss']
             split_configuration = {
                 'train': [0, train_length],
                 'valid': [train_length, len(data) - test_length],
                 'test': [len(data) - test_length, len(data)]
             }
+            print(split_configuration)
             tsp_test = TimeSeriesPreprocessor(
                 **column_specifiers,
                 context_length=context_length,
@@ -214,13 +206,17 @@ def run(train_year, index):
             train_dataset, valid_dataset, test_dataset = tsp_test.get_datasets(
                 data, split_configuration, fewshot_fraction=fewshot_fraction, fewshot_location="first"
             )
-
-            preds_fewshot = forecast_trainer.predict(test_dataset)
-            predictions_fewshot = preds_fewshot[0][0]
+            
+            inputs=[]
+            for idx, inps in tqdm(enumerate(test_dataset)):
+                inputs.append(inps['past_values'])
+            inputs=torch.stack(inputs)
+            preds_fewshot=forecast_model(inputs)
+            predictions_fewshot = preds_fewshot[0]
             final_preds_fewshot = predictions_fewshot[:,0,:]
             final_preds_fewshot = final_preds_fewshot.flatten()
             dataset_test = data[-len(test_dataset):].reset_index().drop('index', axis=1)
-            dataset_test['actual_monthly_return_predictions'] = final_preds_fewshot
+            dataset_test['actual_monthly_return_predictions'] = final_preds_fewshot.detach().numpy()
             dataset_test['mse'] = (dataset_test['actual_monthly_return'] - dataset_test['actual_monthly_return_predictions']).rolling(22).apply(lambda x : ((x ** 2).sum()/22))
             dataset_test['rmse'] = (dataset_test['mse'] ** 0.5)
             dataset_test['mean_directionality'] = (dataset_test['actual_monthly_return'] * dataset_test['actual_monthly_return_predictions']).rolling(22).apply(lambda x: 100 * ((x) > 0).sum() / 22)
@@ -232,4 +228,3 @@ def run(train_year, index):
             print(e)
             print(traceback.format_exc())
             continue
-    return True
