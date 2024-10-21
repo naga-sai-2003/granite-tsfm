@@ -1,9 +1,9 @@
 import warnings
 import logging
 import os
-log_path = 'ttm.log'
-if os.path.exists(log_path):
-    os.remove(log_path)
+# log_path = 'ttm.log'
+# if os.path.exists(log_path):
+#     os.remove(log_path)
 
 logging.basicConfig(
     filename='ttm.log',
@@ -54,6 +54,8 @@ def get_es_data(isin, dates, index_prefix, cols=None):
             try:
                 result=es.run_query(query=json.loads(q_total), index=f'{index_prefix}_{year}')
             except Exception as e:
+                print(e)
+                print(traceback.format_exc())
                 pass
             for rs in result['hits']['hits']:
                 es_data=rs['_source']
@@ -65,6 +67,8 @@ def get_es_data(isin, dates, index_prefix, cols=None):
             df = df[cols]
         return df
     except Exception as e:
+        print(e)
+        print(traceback.format_exc())
         pass
 
 def get_values_from_es(isin, date_needed, index, schedular, cols=None):

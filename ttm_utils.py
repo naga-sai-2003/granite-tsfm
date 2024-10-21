@@ -35,7 +35,7 @@ exp=experiments.loc[1]
 
 # TODO: read these parameters from the ttm.properties file.
 # defining the ttm-hyper-parameters
-output_directory='ttm_finetuned_models/'
+output_directory='ttm_finetuned_model_do_you_bleed/'
 ttm_model_revision='1024_96_v1'
 context_length=int(exp['context_length'])
 forecast_length=int(exp['forecast_length'])
